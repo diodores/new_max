@@ -1,4 +1,5 @@
 import asyncio
+import json
 
 
 class MaxConsumer:
@@ -18,5 +19,9 @@ class MaxConsumer:
         async with queue.iterator() as it:
             async for message in it:
                 async with message.process():
-                    print("[MAX]", message.body.decode())
+                    data = json.loads(message.body.decode())
+
+                    print("\n[MAX MESSAGE]")
+                    print(json.dumps(data, ensure_ascii=False, indent=2))
+
                     await asyncio.sleep(1)

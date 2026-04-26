@@ -28,6 +28,7 @@ class Container:
     async def shutdown(self):
         await self.rabbit.close()
 
+container = Container()
 
 if __name__ == '__main__':
     ...

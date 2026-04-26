@@ -1,4 +1,5 @@
 import asyncio
+import json
 
 
 class WhatsAppConsumer:
@@ -18,5 +19,9 @@ class WhatsAppConsumer:
         async with queue.iterator() as it:
             async for message in it:
                 async with message.process():
-                    print("[WHATSAPP]", message.body.decode())
+                    data = json.loads(message.body.decode())
+
+                    print("\n[WHATSAPP MESSAGE]")
+                    print(json.dumps(data, ensure_ascii=False, indent=2))
+
                     await asyncio.sleep(1)
