@@ -22,6 +22,6 @@ class Producer:
                 "source": payload.get("platform"),
             },
         )
-
+        print(f"[PUBLISH] routing_key={routing_key}")
         await exchange.publish(message, routing_key=routing_key)
 

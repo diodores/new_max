@@ -14,13 +14,14 @@ class WhatsAppConsumer:
 
         exchange = self.rabbit.get_exchange()
 
-        await queue.bind(exchange, routing_key="120363423596256859@g.us")
+        await queue.bind(exchange, routing_key="-72932271489781")
         await queue.bind(exchange, routing_key="max.chat2")
 
         async with queue.iterator() as it:
             async for message in it:
                 async with message.process():
                     data = json.loads(message.body.decode())
+
 
                     print("\n[WHATSAPP MESSAGE]")
                     print(json.dumps(data, ensure_ascii=False, indent=2))

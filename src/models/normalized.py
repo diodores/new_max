@@ -30,5 +30,5 @@ class NormalizedMessage(BaseModel):
     message_id: str = ""
 
     # доп. полезно для роутинга в rabbit
-    routing_key: str | None = None
+    #routing_key: str | None = None
 

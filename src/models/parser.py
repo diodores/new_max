@@ -2,7 +2,7 @@
 from datetime import datetime, timezone, timedelta
 from src.models.raw import RawWebhook
 from src.models.normalized import NormalizedMessage
-from src.models.chat_map import CHAT_MAP
+
 
 
 MSK = timezone(timedelta(hours=3))
@@ -53,7 +53,7 @@ def parse_webhook(raw: RawWebhook, platform: str) -> NormalizedMessage:
 
     # -------- ROUTING --------
     #routing_key = f"{CHAT_MAP.get(chat_id)}"
-    routing_key = f"{chat_id}"
+    #routing_key = f"{chat_id}"
 
     return NormalizedMessage(
         platform=platform,
@@ -73,6 +73,6 @@ def parse_webhook(raw: RawWebhook, platform: str) -> NormalizedMessage:
         datetime_msk=dt_msk,
 
         message_id=raw.idMessage,
-        routing_key=routing_key,
+        #routing_key=routing_key,
     )
 

@@ -37,10 +37,18 @@ class Router:
         :return: {'platform': '...', 'chat_id': '...'}
         """
 
-        return self._map.get((platform, chat_id))
+        route = self._map.get((platform, chat_id))
 
-# if __name__ == "__main__":
-#     path_r = Path(__file__).parent.parent / "routing.json"
-#     router = Router(path_r)
-#     print(router.resolve("max", "-72932271489781"))
-#     print(router._map)
+        if not route:
+            print(f"[ROUTER] No route for {platform}:{chat_id}")
+
+        return route
+
+if __name__ == "__main__":
+    path_r = Path(__file__).parent.parent / "routing.json"
+    router = Router(path_r)
+    #print(router.resolve("max", "-72932271489781"))
+    rout = router._map
+    print(rout)
+    for k, v in rout.items():
+        print(k, v)

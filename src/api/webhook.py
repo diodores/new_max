@@ -1,10 +1,12 @@
 #maxbot_rebbit/src/api/webhook.py
+from pathlib import Path
 
 from fastapi import APIRouter, Request, HTTPException
 
 from src.models.raw import RawWebhook
 from src.models.parser import parse_webhook
 from src.rabbit.container import container
+from src.rabbit.routing import Router
 
 
 router = APIRouter()
@@ -14,15 +16,15 @@ ALLOWED_EVENTS = {
     "incomingMessageReceived",
 }
 
+path_json = Path(__file__).parent.parent / "routing.json"
+router_obj = Router(path_json)
 
 @router.post("/{source}")
 async def webhook(request: Request, source: str):
     data = await request.json()
-
-    print("\n[RAW]")
-    #print(data)
-
+    #print("\n[RAW]")
     event = data.get("typeWebhook")
+    print(f"[RAW] event={event}")
 
     # --- фильтр по типу события ---
     if event not in ALLOWED_EVENTS:
@@ -45,23 +47,24 @@ async def webhook(request: Request, source: str):
     msg = parse_webhook(raw, platform=source)
 
     print("\n[NORMALIZED]")
-    print(msg)
-    print(msg.routing_key)
-    print("--- STOP!!!! ---")
+    #print(msg)
+    print("---передаю продюсеру---")
 
     # --- проверка producer ---
     producer = container.producer
     if not producer:
         raise HTTPException(status_code=500, detail="Producer not initialized")
 
-    # --- проверка routing ---
-    if not msg.routing_key:
-        print("[ERROR] empty routing_key")
+    # --- routing ---
+    route = router_obj.resolve(msg.platform, msg.chat_id)
+
+    if not route:
+        print(f"[NO ROUTE] {msg.platform}:{msg.chat_id}")
         return {"ignored": True}
 
     # --- publish ---
     await producer.publish(
-        routing_key=msg.routing_key,
+        routing_key=route["chat_id"],
         payload=msg.model_dump()
     )
 
