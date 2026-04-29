@@ -1,3 +1,4 @@
+#maxbot_rebbit/src/models/parser.py
 from datetime import datetime, timezone, timedelta
 from src.models.raw import RawWebhook
 from src.models.normalized import NormalizedMessage
@@ -51,8 +52,8 @@ def parse_webhook(raw: RawWebhook, platform: str) -> NormalizedMessage:
     dt_msk = datetime.fromtimestamp(timestamp, MSK).strftime("%Y-%m-%d %H:%M:%S")
 
     # -------- ROUTING --------
-    routing_key = f"{CHAT_MAP.get(chat_id)}"
-    #routing_key = f"{platform}.{chat_id}"
+    #routing_key = f"{CHAT_MAP.get(chat_id)}"
+    routing_key = f"{chat_id}"
 
     return NormalizedMessage(
         platform=platform,
@@ -74,3 +75,4 @@ def parse_webhook(raw: RawWebhook, platform: str) -> NormalizedMessage:
         message_id=raw.idMessage,
         routing_key=routing_key,
     )
+

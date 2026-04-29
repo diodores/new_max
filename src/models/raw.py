@@ -1,5 +1,6 @@
+#my_project/maxbot_rebbit/src/models/raw.py
 from pydantic import BaseModel
-from typing import Optional, Dict, Any
+from typing import Dict, Any
 
 
 class RawWebhook(BaseModel):
@@ -9,4 +10,5 @@ class RawWebhook(BaseModel):
     idMessage: str
 
     senderData: Dict[str, Any]
-    messageData: Optional[Dict[str, Any]] = None
+    messageData: Dict[str, Any]| None
+

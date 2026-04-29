@@ -1,4 +1,4 @@
-# container.py
+#my_project/maxbot_rebbit/src/rabbit/container.py
 from src.rabbit.connection import RabbitMQ
 from src.rabbit.producer import Producer
 from src.rabbit.consumers.whatsapp import WhatsAppConsumer
@@ -30,7 +30,8 @@ class Container:
 
 container = Container()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
+
     ...
     # import asyncio
     #

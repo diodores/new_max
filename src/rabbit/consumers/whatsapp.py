@@ -1,3 +1,4 @@
+#my_project/maxbot_rebbit/src/rabbit/consumers/whatsapp.py
 import asyncio
 import json
 
@@ -13,7 +14,7 @@ class WhatsAppConsumer:
 
         exchange = self.rabbit.get_exchange()
 
-        await queue.bind(exchange, routing_key="max.chat1")
+        await queue.bind(exchange, routing_key="120363423596256859@g.us")
         await queue.bind(exchange, routing_key="max.chat2")
 
         async with queue.iterator() as it:
@@ -25,3 +26,4 @@ class WhatsAppConsumer:
                     print(json.dumps(data, ensure_ascii=False, indent=2))
 
                     await asyncio.sleep(1)
+

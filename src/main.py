@@ -1,3 +1,4 @@
+#my_project/maxbot_rebbit/src/main.py
 import asyncio
 from fastapi import FastAPI
 from contextlib import asynccontextmanager

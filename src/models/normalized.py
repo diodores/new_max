@@ -1,4 +1,4 @@
-#src/models/normalized.py
+#maxbot_rebbit/src/models/normalized.py
 from typing import Literal
 from pydantic import BaseModel
 
@@ -31,3 +31,4 @@ class NormalizedMessage(BaseModel):
 
     # доп. полезно для роутинга в rabbit
     routing_key: str | None = None
+

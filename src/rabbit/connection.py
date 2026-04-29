@@ -1,4 +1,4 @@
-# rabbit.py
+#my_project/maxbot_rebbit/src/rabbit/connection.py
 import aio_pika
 
 
@@ -30,3 +30,4 @@ class RabbitMQ:
 
     def get_exchange(self):
         return self._exchange
+

@@ -1,0 +1,45 @@
+{
+  "routes": [
+    {
+      "from": {
+        "platform": "max",
+        "chat_id": "-72932271489781"
+      },
+      "to": {
+        "platform": "whatsapp",
+        "chat_id": "120363423596256859@g.us"
+      }
+    },
+    {
+      "from": {
+        "platform": "whatsapp",
+        "chat_id": "120363423596256859@g.us"
+      },
+      "to": {
+        "platform": "max",
+        "chat_id": "-72932271489781"
+      }
+    },
+
+    {
+      "from": {
+        "platform": "max",
+        "chat_id": "max.chat2"
+      },
+      "to": {
+        "platform": "whatsapp",
+        "chat_id": "whatsapp.chat2"
+      }
+    },
+    {
+      "from": {
+        "platform": "whatsapp",
+        "chat_id": "whatsapp.chat2"
+      },
+      "to": {
+        "platform": "max",
+        "chat_id": "max.chat2"
+      }
+    }
+  ]
+}

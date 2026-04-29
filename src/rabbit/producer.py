@@ -1,3 +1,4 @@
+#my_project/maxbot_rebbit/src/rabbit/producer.py
 import json
 import uuid
 from aio_pika import Message
@@ -23,3 +24,4 @@ class Producer:
         )
 
         await exchange.publish(message, routing_key=routing_key)
+

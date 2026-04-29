@@ -1,3 +1,4 @@
+#my_project/maxbot_rebbit/src/models/utils.py
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -36,3 +37,4 @@ def extract_media(message_data: dict) -> str | None:
         return file_block.get("downloadUrl")
 
     return None
+

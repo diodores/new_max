@@ -1,3 +1,4 @@
+#my_project/maxbot_rebbit/src/config.py
 from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 

@@ -1,3 +1,5 @@
+#maxbot_rebbit/src/api/webhook.py
+
 from fastapi import APIRouter, Request, HTTPException
 
 from src.models.raw import RawWebhook
@@ -18,7 +20,7 @@ async def webhook(request: Request, source: str):
     data = await request.json()
 
     print("\n[RAW]")
-    print(data)
+    #print(data)
 
     event = data.get("typeWebhook")
 
@@ -64,3 +66,5 @@ async def webhook(request: Request, source: str):
     )
 
     return {"ok": True}
+
+
