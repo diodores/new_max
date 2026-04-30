@@ -21,9 +21,10 @@ class WhatsAppConsumer:
             async for message in it:
                 async with message.process():
                     data = json.loads(message.body.decode())
-
+                    routing_key = message.routing_key
 
                     print("\n[WHATSAPP MESSAGE]")
+                    print(f"routing_key: {routing_key}")
                     print(json.dumps(data, ensure_ascii=False, indent=2))
 
                     await asyncio.sleep(1)

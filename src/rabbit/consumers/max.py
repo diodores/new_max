@@ -23,12 +23,11 @@ class MaxConsumer:
                 async with message.process():
                     data = json.loads(message.body.decode())
 
-                    if data["routing_key"] == "-72932271489781":
-                        print(f"Отправим туда то")
 
-
-                        print("\n[MAX MESSAGE]")
-                        print(json.dumps(data, ensure_ascii=False, indent=2))
+                    print("\n[MAX MESSAGE]")
+                    print(json.dumps(data, ensure_ascii=False, indent=2))
 
                     await asyncio.sleep(1)
+
+
 
