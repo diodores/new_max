@@ -45,8 +45,8 @@ class WhatsAppConsumer:
                             caption=msg.get("caption")
                         )
 
-                    print("\n[WHATSAPP MESSAGE]")
-                    print(f"routing_key: {routing_key}")
-                    print(msg)
+                    # print("\n[WHATSAPP MESSAGE]")
+                    # print(f"routing_key: {routing_key}")
+                    # print(msg)
 
                     await asyncio.sleep(1)

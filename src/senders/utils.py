@@ -50,11 +50,15 @@ def build_message(data: dict) -> dict | None:
         return {
             "type": "text",
             "text": (
-                f"{reply_emoji} *Ответ*\n"
                 f"{user_emoji} *{author}*\n"
+                f"{reply_emoji} *Ответ на:*\n"
+                f"------\n"
+                f"--> {quoted}\n"
+                f"------\n"
+                f"{msg_emoji} {text or ''}\n"
                 f"{time_emoji} {time}\n\n"
-                f"> {quoted}\n\n"
-                f"{msg_emoji} {text or ''}"
+
+
             )
         }
 
@@ -66,8 +70,9 @@ def build_message(data: dict) -> dict | None:
             "type": "text",
             "text": (
                 f"{user_emoji} *{author}*\n"
-                f"{time_emoji} {time}\n\n"
-                f"{msg_emoji} {text}"
+                f"{msg_emoji} {text}\n\n"
+                f"{time_emoji} {time}\n"
+                
             )
         }
 

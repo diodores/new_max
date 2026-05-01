@@ -45,8 +45,8 @@ class MaxConsumer:
                             caption=msg.get("caption")
                         )
 
-                    print("\n[MAX MESSAGE]")
-                    print(f"routing_key: {routing_key}")
-                    print(msg)
+                    # print("\n[MAX MESSAGE]")
+                    # print(f"routing_key: {routing_key}")
+                    # print(msg)
 
                     await asyncio.sleep(1)

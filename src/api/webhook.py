@@ -24,31 +24,31 @@ async def webhook(request: Request, source: str):
     data = await request.json()
     #print(f"\n{data}")
     event = data.get("typeWebhook")
-    print(f"[RAW] event={event}")
+    #print(f"[RAW] event={event}")
 
     # --- фильтр по типу события ---
     if event not in ALLOWED_EVENTS:
-        print("[SKIP EVENT]", event)
-        print("*************")
+        #print("[SKIP EVENT]", event)
+        #print("*************")
         return {"ignored": True}
 
     # --- фильтр на мусорные payload ---
     if "messageData" not in data:
-        print("[SKIP NO messageData]")
+        #print("[SKIP NO messageData]")
         return {"ignored": True}
 
     # --- парсинг ---
     try:
         raw = RawWebhook(**data)
     except Exception as e:
-        print("[VALIDATION ERROR]", e)
+        #print("[VALIDATION ERROR]", e)
         return {"ignored": True}
 
     msg = parse_webhook(raw, platform=source)
 
-    print("\n[NORMALIZED]")
+    #print("\n[NORMALIZED]")
     #print(msg)
-    print("---передаю продюсеру---")
+    #print("---передаю продюсеру---")
 
     # --- проверка producer ---
     producer = container.producer
@@ -59,7 +59,7 @@ async def webhook(request: Request, source: str):
     route = router_obj.resolve(msg.platform, msg.chat_id)
 
     if not route:
-        print(f"[NO ROUTE] {msg.platform}:{msg.chat_id}")
+        #print(f"[NO ROUTE] {msg.platform}:{msg.chat_id}")
         return {"ignored": True}
 
     # --- publish ---
