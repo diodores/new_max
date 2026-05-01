@@ -16,7 +16,7 @@ class MaxConsumer:
         exchange = self.rabbit.get_exchange()
 
         await queue.bind(exchange, routing_key="120363423596256859@g.us")
-        await queue.bind(exchange, routing_key="whatsapp.chat2")
+        await queue.bind(exchange, routing_key="120363408049945016@g.us")
 
         async with queue.iterator() as it:
             async for message in it:

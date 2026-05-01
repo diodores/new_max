@@ -24,21 +24,21 @@
     {
       "from": {
         "platform": "max",
-        "chat_id": "max.chat2"
+        "chat_id": "-73294784463605"
       },
       "to": {
         "platform": "whatsapp",
-        "chat_id": "whatsapp.chat2"
+        "chat_id": "120363408049945016@g.us"
       }
     },
     {
       "from": {
         "platform": "whatsapp",
-        "chat_id": "whatsapp.chat2"
+        "chat_id": "120363408049945016@g.us"
       },
       "to": {
         "platform": "max",
-        "chat_id": "max.chat2"
+        "chat_id": "-73294784463605"
       }
     }
   ]

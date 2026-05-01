@@ -31,41 +31,17 @@ def parse_webhook(raw: RawWebhook, platform: str) -> NormalizedMessage:
 
     msg_type = msg.get("typeMessage")
 
-    # -------- TEXT / QUOTED / REACTION --------
+    # -------- TEXT --------
     if msg_type == "textMessage":
         text = msg.get("textMessageData", {}).get("textMessage")
 
     elif msg_type == "quotedMessage":
-        # текст ответа
         text = msg.get("extendedTextMessageData", {}).get("text")
 
-        # оригинальное сообщение
-        quoted_block = msg.get("quotedMessage")
-        if quoted_block:
-            q_type = quoted_block.get("typeMessage")
-
-            if q_type == "textMessage":
-                quoted_text = (
-                    quoted_block.get("textMessageData", {})
-                                .get("textMessage")
-                )
-
-            elif q_type in ["imageMessage", "videoMessage", "documentMessage"]:
-                quoted_caption = quoted_block.get("caption")
-                quoted_file_name = quoted_block.get("fileName")
-                quoted_media_url = quoted_block.get("downloadUrl")
-
-                # fallback если нет подписи
-                if not quoted_caption:
-                    quoted_caption = f"[{q_type}]"
-
     elif msg_type == "reactionMessage":
-        reaction = (
-            msg.get("extendedTextMessageData", {})
-               .get("text")
-        )
+        reaction = msg.get("extendedTextMessageData", {}).get("text")
 
-    # -------- MEDIA (основного сообщения) --------
+    # -------- MEDIA --------
     file_data = msg.get("fileMessageData")
 
     if file_data:
@@ -76,9 +52,30 @@ def parse_webhook(raw: RawWebhook, platform: str) -> NormalizedMessage:
         if msg_type == "documentMessage" and not caption:
             caption = file_name
 
+    # -------- QUOTED (универсально) --------
+    quoted_block = msg.get("quotedMessage")
+
+    if quoted_block:
+        q_type = quoted_block.get("typeMessage")
+
+        if q_type == "textMessage":
+            quoted_text = (
+                quoted_block.get("textMessageData", {})
+                            .get("textMessage")
+            )
+
+        elif q_type in ["imageMessage", "videoMessage", "documentMessage"]:
+            quoted_caption = quoted_block.get("caption")
+            quoted_file_name = quoted_block.get("fileName")
+            quoted_media_url = quoted_block.get("downloadUrl")
+
+            if not quoted_caption:
+                quoted_caption = f"[{q_type}]"
+
     # -------- REPLY META --------
-    quoted = msg.get("quotedMessage")
-    reply_to_message_id = quoted.get("stanzaId") if quoted else None
+    reply_to_message_id = (
+        quoted_block.get("stanzaId") if quoted_block else None
+    )
 
     # -------- TIME --------
     dt_msk = datetime.fromtimestamp(timestamp, MSK).strftime("%Y-%m-%d %H:%M:%S")
