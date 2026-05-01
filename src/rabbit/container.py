@@ -4,6 +4,7 @@ from src.rabbit.producer import Producer
 from src.rabbit.consumers.whatsapp import WhatsAppConsumer
 from src.rabbit.consumers.max import MaxConsumer
 from src.config import settings
+from src.senders.whatsapp import WhatsAppSender
 
 
 class Container:
@@ -12,21 +13,33 @@ class Container:
         self.producer = None
 
         self.whatsapp = None
+        self.whatsapp_sender = None
+
         self.max = None
+
 
     async def init(self):
         self.rabbit = RabbitMQ(settings.RABBITMQ_URL)
         await self.rabbit.connect()
-
         await self.rabbit.setup_exchange()
 
         self.producer = Producer(self.rabbit)
 
         self.whatsapp = WhatsAppConsumer(self.rabbit)
-        self.max = MaxConsumer(self.rabbit)
+
+        # ❗ используем ОДИН settings
+        self.whatsapp_sender = WhatsAppSender(settings)
+
+        self.max = MaxConsumer(
+            self.rabbit,
+            self.whatsapp_sender
+        )
 
     async def shutdown(self):
         await self.rabbit.close()
+
+        if self.max_sender:
+            await self.max_sender.close()
 
 container = Container()
 

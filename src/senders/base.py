@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict
+from src.config import Settings
 
 
 class BaseSender(ABC):
-    def __init__(self, config: Dict[str, Any]):
-        self.config = config
+    def __init__(self, settings: Settings):
+        self.settings = settings
 
     @abstractmethod
     async def send_text(self, chat_id: str, text: str) -> dict:
