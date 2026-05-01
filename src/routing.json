@@ -3,28 +3,28 @@
     {
       "from": {
         "platform": "max",
-        "chat_id": "-72932271489781"
+        "chat_id": "-69118081870446"
       },
       "to": {
         "platform": "whatsapp",
-        "chat_id": "120363423596256859@g.us"
+        "chat_id": "120363025193738039@g.us"
       }
     },
     {
       "from": {
         "platform": "whatsapp",
-        "chat_id": "120363423596256859@g.us"
+        "chat_id": "120363025193738039@g.us"
       },
       "to": {
         "platform": "max",
-        "chat_id": "-72932271489781"
+        "chat_id": "-69118081870446"
       }
     },
 
     {
       "from": {
         "platform": "max",
-        "chat_id": "-73294784463605"
+        "chat_id": "-70111188372168"
       },
       "to": {
         "platform": "whatsapp",
@@ -38,7 +38,7 @@
       },
       "to": {
         "platform": "max",
-        "chat_id": "-73294784463605"
+        "chat_id": "-70111188372168"
       }
     }
   ]
