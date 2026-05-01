@@ -1,3 +1,5 @@
+#my_project/maxbot_rebbit/src/models/parser.py
+
 from datetime import datetime, timezone, timedelta
 from src.models.raw import RawWebhook
 from src.models.normalized import NormalizedMessage
