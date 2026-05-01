@@ -10,5 +10,4 @@ class RawWebhook(BaseModel):
     idMessage: str
 
     senderData: Dict[str, Any]
-    messageData: Dict[str, Any]| None
-
+    messageData: Dict[str, Any] | None

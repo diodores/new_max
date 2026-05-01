@@ -1,6 +1,6 @@
 #my_project/maxbot_rebbit/src/models/parser.py
-
 from datetime import datetime, timezone, timedelta
+
 from src.models.raw import RawWebhook
 from src.models.normalized import NormalizedMessage
 
@@ -10,7 +10,7 @@ MSK = timezone(timedelta(hours=3))
 
 def parse_webhook(raw: RawWebhook, platform: str) -> NormalizedMessage:
     sender = raw.senderData
-    msg = raw.messageData
+    msg = raw.messageData or {}
 
     chat_id = sender.get("chatId")
     chat_name = sender.get("chatName")
@@ -32,52 +32,51 @@ def parse_webhook(raw: RawWebhook, platform: str) -> NormalizedMessage:
     quoted_caption = None
 
     msg_type = msg.get("typeMessage")
+    ext = msg.get("extendedTextMessageData", {})
 
     # -------- TEXT --------
     if msg_type == "textMessage":
         text = msg.get("textMessageData", {}).get("textMessage")
 
-    elif msg_type == "quotedMessage":
-        text = msg.get("extendedTextMessageData", {}).get("text")
+    elif msg_type == "extendedTextMessage":
+        text = ext.get("text")
 
     elif msg_type == "reactionMessage":
-        reaction = msg.get("extendedTextMessageData", {}).get("text")
+        reaction = ext.get("text")
 
     # -------- MEDIA --------
     file_data = msg.get("fileMessageData")
-
     if file_data:
         media_url = file_data.get("downloadUrl")
         caption = file_data.get("caption") or ""
         file_name = file_data.get("fileName")
 
-        if msg_type == "documentMessage" and not caption:
-            caption = file_name
-
-    # -------- QUOTED (универсально) --------
+    # -------- QUOTED --------
     quoted_block = msg.get("quotedMessage")
 
     if quoted_block:
         q_type = quoted_block.get("typeMessage")
 
         if q_type == "textMessage":
-            quoted_text = (
-                quoted_block.get("textMessageData", {})
-                            .get("textMessage")
-            )
+            quoted_text = quoted_block.get("textMessageData", {}).get("textMessage")
 
         elif q_type in ["imageMessage", "videoMessage", "documentMessage"]:
             quoted_caption = quoted_block.get("caption")
             quoted_file_name = quoted_block.get("fileName")
             quoted_media_url = quoted_block.get("downloadUrl")
 
-            if not quoted_caption:
-                quoted_caption = f"[{q_type}]"
-
     # -------- REPLY META --------
     reply_to_message_id = (
         quoted_block.get("stanzaId") if quoted_block else None
     )
+
+    # -------- FORWARDED (ВАЖНО) --------
+    is_forwarded = False
+    forward_score = 0
+
+    if msg_type == "extendedTextMessage":
+        is_forwarded = ext.get("isForwarded", False)
+        forward_score = ext.get("forwardingScore", 0)
 
     # -------- TIME --------
     dt_msk = datetime.fromtimestamp(timestamp, MSK).strftime("%Y-%m-%d %H:%M:%S")
@@ -99,6 +98,9 @@ def parse_webhook(raw: RawWebhook, platform: str) -> NormalizedMessage:
         quoted_media_url=quoted_media_url,
         quoted_file_name=quoted_file_name,
         quoted_caption=quoted_caption,
+
+        is_forwarded=is_forwarded,
+        forward_score=forward_score,
 
         reply_to_message_id=reply_to_message_id,
 

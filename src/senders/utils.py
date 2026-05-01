@@ -1,7 +1,4 @@
 def build_message(data: dict) -> dict | None:
-    message_data = data.get("messageData", {})
-    msg_type = message_data.get("typeMessage")
-
     author = data.get("author", "unknown")
     text = data.get("text")
     media_url = data.get("media_url")
@@ -11,6 +8,8 @@ def build_message(data: dict) -> dict | None:
     quoted_text = data.get("quoted_text")
     quoted_caption = data.get("quoted_caption")
     reply_to = data.get("reply_to_message_id")
+
+    is_forwarded = data.get("is_forwarded", False)
 
     time = data.get("datetime_msk", "")
 
@@ -25,20 +24,20 @@ def build_message(data: dict) -> dict | None:
     file_emoji = "📎"
 
     # -------------------------
-    # 1. REACTION → IGNORE
+    # REACTION
     # -------------------------
     if reaction:
         return None
 
     # -------------------------
-    # 2. FILE
+    # FILE
     # -------------------------
     if media_url:
         return {
             "type": "file",
             "file_url": media_url,
             "caption": (
-                f"{file_emoji} *Файл*\n"
+                f"{file_emoji} Файл\n"
                 f"{user_emoji} {author}\n"
                 f"{time_emoji} {time}\n\n"
                 f"{caption or ''}"
@@ -46,27 +45,21 @@ def build_message(data: dict) -> dict | None:
         }
 
     # -------------------------
-    # 3. FORWARDED (НОВОЕ)
+    # FORWARDED
     # -------------------------
-    if msg_type == "extendedTextMessage":
-        ext = message_data.get("extendedTextMessageData", {})
-
-        is_forwarded = ext.get("isForwarded", False)
-        forwarding_score = ext.get("forwardingScore", 0)
-
-        if is_forwarded or forwarding_score > 0:
-            return {
-                "type": "text",
-                "text": (
-                    f"{forward_emoji} *Пересланное сообщение*\n"
-                    f"{user_emoji} *{author}*\n"
-                    f"{msg_emoji} {ext.get('text', text or '')}\n"
-                    f"{time_emoji} {time}"
-                )
-            }
+    if is_forwarded:
+        return {
+            "type": "text",
+            "text": (
+                f"{forward_emoji} Пересланное сообщение\n"
+                f"{user_emoji} {author}\n"
+                f"{time_emoji} {time}\n\n"
+                f"{msg_emoji} {text or ''}"
+            )
+        }
 
     # -------------------------
-    # 4. QUOTED / REPLY
+    # REPLY
     # -------------------------
     if quoted_text or quoted_caption or reply_to:
         quoted = quoted_text or quoted_caption or "[сообщение недоступно]"
@@ -74,26 +67,26 @@ def build_message(data: dict) -> dict | None:
         return {
             "type": "text",
             "text": (
-                f"{user_emoji} *{author}*\n"
-                f"{reply_emoji} *Ответ на:*\n"
+                f"{user_emoji} {author}\n"
+                f"{reply_emoji} Ответ на:\n"
                 f"------\n"
-                f"--> {quoted}\n"
+                f"{quoted}\n"
                 f"------\n"
                 f"{msg_emoji} {text or ''}\n"
-                f"{time_emoji} {time}\n"
+                f"{time_emoji} {time}"
             )
         }
 
     # -------------------------
-    # 5. TEXT
+    # TEXT
     # -------------------------
     if text:
         return {
             "type": "text",
             "text": (
-                f"{user_emoji} *{author}*\n"
+                f"{user_emoji} {author}\n"
                 f"{msg_emoji} {text}\n\n"
-                f"{time_emoji} {time}\n"
+                f"{time_emoji} {time}"
             )
         }
 
