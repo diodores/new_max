@@ -22,9 +22,9 @@ router_obj = Router(path_json)
 @router.post("/{source}")
 async def webhook(request: Request, source: str):
     data = await request.json()
-    #print(f"\n{data}")
+    print(f"\n{data}")
     event = data.get("typeWebhook")
-    #print(f"[RAW] event={event}")
+    print(f"[RAW] event={event}")
 
     # --- фильтр по типу события ---
     if event not in ALLOWED_EVENTS:
