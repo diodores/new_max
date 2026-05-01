@@ -2,6 +2,7 @@
 import asyncio
 import json
 
+from src.senders.utils import build_message
 
 
 class MaxConsumer:
@@ -23,16 +24,29 @@ class MaxConsumer:
             async for message in it:
                 async with message.process():
                     data = json.loads(message.body.decode())
-                    data= str(data)
-                    routing_key = message.routing_key
 
-                    await self.whatsapp_sender.send_text(chat_id=routing_key, text=data)
+                    msg = build_message(data)
+
+                    if not msg:
+                        continue
+
+                    routing_key = str(message.routing_key)
+
+                    if msg["type"] == "text":
+                        await self.whatsapp_sender.send_text(
+                            chat_id=routing_key,
+                            text=msg["text"]
+                        )
+
+                    elif msg["type"] == "file":
+                        await self.whatsapp_sender.send_file(
+                            chat_id=routing_key,
+                            file_url=msg["file_url"],
+                            caption=msg.get("caption")
+                        )
 
                     print("\n[MAX MESSAGE]")
                     print(f"routing_key: {routing_key}")
-                    print(json.dumps(data, ensure_ascii=False, indent=2))
+                    print(msg)
 
                     await asyncio.sleep(1)
-
-
-

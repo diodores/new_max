@@ -62,11 +62,11 @@ class MaxSender(BaseSender):
             self.session = None
 
 
-# if __name__ == "__main__":
-#     async def main():
-#         settings = Settings()
-#         sender = MaxSender(settings)
-#         await sender.send_text(chat_id="-73294784463605", text="test")
-#         await sender.close()
-#
-#     asyncio.run(main())
+if __name__ == "__main__":
+    async def main():
+        settings = Settings()
+        sender = MaxSender(settings)
+        await sender.send_text(chat_id="-73294784463605", text="test")
+        await sender.close()
+
+    asyncio.run(main())

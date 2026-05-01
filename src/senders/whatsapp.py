@@ -63,12 +63,12 @@ class WhatsAppSender(BaseSender):
             self.session = None
 
 
-# if __name__ == "__main__":
-#     async def main():
-#         settings = Settings()
-#         sender = WhatsAppSender(settings)
-#         await sender.send_text(chat_id="120363408049945016@g.us", text="whatsapp")
-#         await sender.close()
-#
-#     asyncio.run(main())
+if __name__ == "__main__":
+    async def main():
+        settings = Settings()
+        sender = WhatsAppSender(settings)
+        await sender.send_text(chat_id="120363408049945016@g.us", text="whatsapp")
+        await sender.close()
+
+    asyncio.run(main())
 
