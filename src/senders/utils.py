@@ -1,4 +1,7 @@
 def build_message(data: dict) -> dict | None:
+    message_data = data.get("messageData", {})
+    msg_type = message_data.get("typeMessage")
+
     author = data.get("author", "unknown")
     text = data.get("text")
     media_url = data.get("media_url")
@@ -17,6 +20,7 @@ def build_message(data: dict) -> dict | None:
     user_emoji = "👤"
     time_emoji = "🕒"
     reply_emoji = "↩️"
+    forward_emoji = "📤"
     msg_emoji = "💬"
     file_emoji = "📎"
 
@@ -42,7 +46,27 @@ def build_message(data: dict) -> dict | None:
         }
 
     # -------------------------
-    # 3. QUOTED (ВАЖНО: выше текста)
+    # 3. FORWARDED (НОВОЕ)
+    # -------------------------
+    if msg_type == "extendedTextMessage":
+        ext = message_data.get("extendedTextMessageData", {})
+
+        is_forwarded = ext.get("isForwarded", False)
+        forwarding_score = ext.get("forwardingScore", 0)
+
+        if is_forwarded or forwarding_score > 0:
+            return {
+                "type": "text",
+                "text": (
+                    f"{forward_emoji} *Пересланное сообщение*\n"
+                    f"{user_emoji} *{author}*\n"
+                    f"{msg_emoji} {ext.get('text', text or '')}\n"
+                    f"{time_emoji} {time}"
+                )
+            }
+
+    # -------------------------
+    # 4. QUOTED / REPLY
     # -------------------------
     if quoted_text or quoted_caption or reply_to:
         quoted = quoted_text or quoted_caption or "[сообщение недоступно]"
@@ -56,14 +80,12 @@ def build_message(data: dict) -> dict | None:
                 f"--> {quoted}\n"
                 f"------\n"
                 f"{msg_emoji} {text or ''}\n"
-                f"{time_emoji} {time}\n\n"
-
-
+                f"{time_emoji} {time}\n"
             )
         }
 
     # -------------------------
-    # 4. TEXT
+    # 5. TEXT
     # -------------------------
     if text:
         return {
@@ -72,7 +94,6 @@ def build_message(data: dict) -> dict | None:
                 f"{user_emoji} *{author}*\n"
                 f"{msg_emoji} {text}\n\n"
                 f"{time_emoji} {time}\n"
-                
             )
         }
 
