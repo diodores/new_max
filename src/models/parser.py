@@ -1,8 +1,6 @@
-#maxbot_rebbit/src/models/parser.py
 from datetime import datetime, timezone, timedelta
 from src.models.raw import RawWebhook
 from src.models.normalized import NormalizedMessage
-
 
 
 MSK = timezone(timedelta(hours=3))
@@ -20,15 +18,54 @@ def parse_webhook(raw: RawWebhook, platform: str) -> NormalizedMessage:
     timestamp = raw.timestamp
 
     text = None
+    reaction = None
+
     media_url = None
     file_name = None
     caption = None
 
-    # -------- TEXT --------
-    if msg["typeMessage"] == "textMessage":
-        text = msg["textMessageData"]["textMessage"]
+    quoted_text = None
+    quoted_media_url = None
+    quoted_file_name = None
+    quoted_caption = None
 
-    # -------- MEDIA --------
+    msg_type = msg.get("typeMessage")
+
+    # -------- TEXT / QUOTED / REACTION --------
+    if msg_type == "textMessage":
+        text = msg.get("textMessageData", {}).get("textMessage")
+
+    elif msg_type == "quotedMessage":
+        # текст ответа
+        text = msg.get("extendedTextMessageData", {}).get("text")
+
+        # оригинальное сообщение
+        quoted_block = msg.get("quotedMessage")
+        if quoted_block:
+            q_type = quoted_block.get("typeMessage")
+
+            if q_type == "textMessage":
+                quoted_text = (
+                    quoted_block.get("textMessageData", {})
+                                .get("textMessage")
+                )
+
+            elif q_type in ["imageMessage", "videoMessage", "documentMessage"]:
+                quoted_caption = quoted_block.get("caption")
+                quoted_file_name = quoted_block.get("fileName")
+                quoted_media_url = quoted_block.get("downloadUrl")
+
+                # fallback если нет подписи
+                if not quoted_caption:
+                    quoted_caption = f"[{q_type}]"
+
+    elif msg_type == "reactionMessage":
+        reaction = (
+            msg.get("extendedTextMessageData", {})
+               .get("text")
+        )
+
+    # -------- MEDIA (основного сообщения) --------
     file_data = msg.get("fileMessageData")
 
     if file_data:
@@ -36,24 +73,15 @@ def parse_webhook(raw: RawWebhook, platform: str) -> NormalizedMessage:
         caption = file_data.get("caption") or ""
         file_name = file_data.get("fileName")
 
-        if msg["typeMessage"] == "documentMessage":
-            if not caption:
-                caption = file_name
+        if msg_type == "documentMessage" and not caption:
+            caption = file_name
 
-    # -------- REPLY --------
+    # -------- REPLY META --------
     quoted = msg.get("quotedMessage")
-
-    reply_to_message_id = None
-
-    if quoted:
-        reply_to_message_id = quoted.get("stanzaId")
+    reply_to_message_id = quoted.get("stanzaId") if quoted else None
 
     # -------- TIME --------
     dt_msk = datetime.fromtimestamp(timestamp, MSK).strftime("%Y-%m-%d %H:%M:%S")
-
-    # -------- ROUTING --------
-    #routing_key = f"{CHAT_MAP.get(chat_id)}"
-    #routing_key = f"{chat_id}"
 
     return NormalizedMessage(
         platform=platform,
@@ -62,9 +90,16 @@ def parse_webhook(raw: RawWebhook, platform: str) -> NormalizedMessage:
         author=author,
 
         text=text,
+        reaction=reaction,
+
         media_url=media_url,
         file_name=file_name,
         caption=caption,
+
+        quoted_text=quoted_text,
+        quoted_media_url=quoted_media_url,
+        quoted_file_name=quoted_file_name,
+        quoted_caption=quoted_caption,
 
         reply_to_message_id=reply_to_message_id,
 
@@ -73,6 +108,4 @@ def parse_webhook(raw: RawWebhook, platform: str) -> NormalizedMessage:
         datetime_msk=dt_msk,
 
         message_id=raw.idMessage,
-        #routing_key=routing_key,
     )
-

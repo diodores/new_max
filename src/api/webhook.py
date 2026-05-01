@@ -22,7 +22,7 @@ router_obj = Router(path_json)
 @router.post("/{source}")
 async def webhook(request: Request, source: str):
     data = await request.json()
-    #print("\n[RAW]")
+    print(f"\n{data}")
     event = data.get("typeWebhook")
     print(f"[RAW] event={event}")
 
