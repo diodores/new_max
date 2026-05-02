@@ -25,9 +25,9 @@ services:
       - "8000:8000"
     restart: unless-stopped
 
+    volumes:
+      - ./logs:/app/logs
+
 
 volumes:
   rabbitmq-data:
-
-
-

@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from src.rabbit.container import container
 from src.api.webhook import router as webhook_router
+from src.api.exceptions.handler import register_exception_handlers
 
 
 consumer_tasks = []
@@ -27,6 +28,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+
+register_exception_handlers(app)
 app.include_router(webhook_router, prefix="/webhook")
 
 

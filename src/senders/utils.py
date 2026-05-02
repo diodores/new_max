@@ -13,9 +13,8 @@ def build_message(data: dict) -> dict | None:
 
     time = data.get("datetime_msk", "")
 
-    # -------------------------
+
     # EMOJI
-    # -------------------------
     user_emoji = "👤"
     time_emoji = "🕒"
     reply_emoji = "↩️"
@@ -23,15 +22,13 @@ def build_message(data: dict) -> dict | None:
     msg_emoji = "💬"
     file_emoji = "📎"
 
-    # -------------------------
+
     # REACTION
-    # -------------------------
     if reaction:
         return None
 
-    # -------------------------
+
     # FILE
-    # -------------------------
     if media_url:
         return {
             "type": "file",
@@ -44,9 +41,8 @@ def build_message(data: dict) -> dict | None:
             )
         }
 
-    # -------------------------
-    # FORWARDED
-    # -------------------------
+
+    # FORWARDED (КРИВО !)
     if is_forwarded:
         return {
             "type": "text",
@@ -58,9 +54,8 @@ def build_message(data: dict) -> dict | None:
             )
         }
 
-    # -------------------------
-    # REPLY
-    # -------------------------
+
+    # REPLY (ПРОРАБОТАТЬ)
     if quoted_text or quoted_caption or reply_to:
         quoted = quoted_text or quoted_caption or "[сообщение недоступно]"
 
@@ -77,9 +72,8 @@ def build_message(data: dict) -> dict | None:
             )
         }
 
-    # -------------------------
+
     # TEXT
-    # -------------------------
     if text:
         return {
             "type": "text",

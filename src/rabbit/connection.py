@@ -1,8 +1,8 @@
 #my_project/maxbot_rebbit/src/rabbit/connection.py
-# my_project/maxbot_rebbit/src/rabbit/connection.py
-
 import asyncio
 import aio_pika
+
+from src.exceptions import RabbitConnectionError, RabbitChannelError, ExchangeNotInitializedError
 
 
 class RabbitMQ:
@@ -24,7 +24,7 @@ class RabbitMQ:
                 print(f"[RabbitMQ] not ready ({attempt + 1}/10): {e}")
                 await asyncio.sleep(2)
 
-        raise RuntimeError("RabbitMQ connection failed after retries")
+        raise RabbitConnectionError ("Не удалось подключится к RabbitMQ, попытки исчерпаны")
 
     async def close(self):
         """
@@ -40,11 +40,14 @@ class RabbitMQ:
         Создание канала с QoS.
         """
         if not self._connection:
-            raise RuntimeError("RabbitMQ is not connected")
+            raise RabbitChannelError("RabbitMQ не подключен")
 
-        channel = await self._connection.channel(publisher_confirms=True)
-        await channel.set_qos(prefetch_count=1)
-        return channel
+        try:
+            channel = await self._connection.channel(publisher_confirms=True)
+            await channel.set_qos(prefetch_count=1)
+            return channel
+        except Exception as e:
+            raise RabbitChannelError(str(e))
 
     async def setup_exchange(self):
         """
@@ -63,7 +66,7 @@ class RabbitMQ:
         Безопасный доступ к exchange.
         """
         if not self._exchange:
-            raise RuntimeError("Exchange not initialized. Call setup_exchange() first.")
+            raise ExchangeNotInitializedError("Exchange from не ициниализирован")
         return self._exchange
 
     async def init(self):

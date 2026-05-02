@@ -2,11 +2,14 @@
 from pathlib import Path
 
 from fastapi import APIRouter, Request, HTTPException
+from pydantic import ValidationError
 
 from src.models.raw import RawWebhook
 from src.models.parser import parse_webhook
 from src.rabbit.container import container
 from src.rabbit.routing import Router
+from src.api.response import success, ignored
+from src.exceptions import WebhookValidationError, ProducerNotReadyError
 
 
 router = APIRouter()
@@ -30,19 +33,19 @@ async def webhook(request: Request, source: str):
     if event not in ALLOWED_EVENTS:
         #print("[SKIP EVENT]", event)
         #print("*************")
-        return {"ignored": True}
+        return ignored()
 
     # --- фильтр на мусорные payload ---
     if "messageData" not in data:
         #print("[SKIP NO messageData]")
-        return {"ignored": True}
+        return ignored()
 
     # --- парсинг ---
     try:
         raw = RawWebhook(**data)
-    except Exception as e:
-        #print("[VALIDATION ERROR]", e)
-        return {"ignored": True}
+    except ValidationError as e:
+        raise WebhookValidationError(str(e))
+
 
     msg = parse_webhook(raw, platform=source)
 
@@ -53,14 +56,14 @@ async def webhook(request: Request, source: str):
     # --- проверка producer ---
     producer = container.producer
     if not producer:
-        raise HTTPException(status_code=500, detail="Producer not initialized")
+        raise ProducerNotReadyError()
 
     # --- routing ---
     route = router_obj.resolve(msg.platform, msg.chat_id)
 
     if not route:
         #print(f"[NO ROUTE] {msg.platform}:{msg.chat_id}")
-        return {"ignored": True}
+        return ignored()
 
     # --- publish ---
     await producer.publish(
@@ -68,6 +71,6 @@ async def webhook(request: Request, source: str):
         payload=msg.model_dump()
     )
 
-    return {"ok": True}
+    return success()
 
 

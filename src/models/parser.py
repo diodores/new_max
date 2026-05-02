@@ -65,12 +65,12 @@ def parse_webhook(raw: RawWebhook, platform: str) -> NormalizedMessage:
             quoted_file_name = quoted_block.get("fileName")
             quoted_media_url = quoted_block.get("downloadUrl")
 
-    # -------- REPLY META --------
+    # -------- REPLY META (ИСПРАВИТЬ КАК ПРИКРУЧУ БД) --------
     reply_to_message_id = (
         quoted_block.get("stanzaId") if quoted_block else None
     )
 
-    # -------- FORWARDED (ВАЖНО) --------
+    # -------- FORWARDED (ВАЖНО КРИВО РАБОТАЕТ ПОПРАВИТЬ !!!) --------
     is_forwarded = False
     forward_score = 0
 

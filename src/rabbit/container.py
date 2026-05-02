@@ -26,15 +26,13 @@ class Container:
 
         self.producer = Producer(self.rabbit)
 
-        # -------------------
+
         # SENDERS
-        # -------------------
         self.whatsapp_sender = WhatsAppSender(settings)
         self.max_sender = MaxSender(settings)
 
-        # -------------------
+
         # CONSUMERS
-        # -------------------
         self.whatsapp = WhatsAppConsumer(
             self.rabbit,
             self.max_sender
@@ -57,7 +55,6 @@ class Container:
 
 container = Container()
 
-container = Container()
 
 if __name__ == "__main__":
 

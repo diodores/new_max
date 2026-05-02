@@ -1,7 +1,10 @@
 #my_project/maxbot_rebbit/src/rabbit/producer.py
 import json
 import uuid
+import asyncio
 from aio_pika import Message
+
+from src.exceptions import PublishError
 
 
 class Producer:
@@ -22,6 +25,16 @@ class Producer:
                 "source": payload.get("platform"),
             },
         )
-        #print(f"[PUBLISH] routing_key={routing_key}")
-        await exchange.publish(message, routing_key=routing_key)
 
+        last_error = None
+
+        for attempt in range(3):
+            try:
+                await exchange.publish(message, routing_key=routing_key)
+                return
+
+            except Exception as e:
+                last_error = e
+                await asyncio.sleep(0.3 * (attempt + 1))
+
+        raise PublishError(str(last_error))

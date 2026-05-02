@@ -1,7 +1,8 @@
 #my_project/maxbot_rebbit/src/rabbit/routing.py
 import json
 from pathlib import Path
-from typing import Optional, Dict, Tuple
+from typing import Dict, Tuple
+from src.exceptions import RoutingConfigError
 
 
 class Router:
@@ -16,33 +17,32 @@ class Router:
         :return: {('platform', 'chat_id') --> {'platform':'...', 'chat_id':'...'} и т.д
         """
         if not self.path.exists():
-            raise RuntimeError(f"Routing file not found: {self.path}")
+            raise RoutingConfigError(f"Не найден файл для создания карты роутинга: {self.path}")
 
-        data = json.loads(self.path.read_text())
+        try:
+            data = json.loads(self.path.read_text())
+        except Exception as e:
+            raise RoutingConfigError(f"from Не корретный routing.json: {e}")
 
         routes = data.get("routes", [])
 
-        # быстрый lookup:
+        if routes is None:
+            raise RoutingConfigError("В файле routing.json отсутствует поле «routes»")
+
         # (platform, chat_id) -> {platform, chat_id}
         self._map = {
             (r["from"]["platform"], r["from"]["chat_id"]): r["to"]
             for r in routes
         }
 
-    def resolve(self, platform: str, chat_id: str) -> Optional[Dict]:
+    def resolve(self, platform: str, chat_id: str) -> Dict | None:
         """
         Задаем источник , получаем кому предназначается.
         :param platform:
         :param chat_id:
         :return: {'platform': '...', 'chat_id': '...'}
         """
-
-        route = self._map.get((platform, chat_id))
-
-        if not route:
-            print(f"[ROUTER] No route for {platform}:{chat_id}")
-
-        return route
+        return self._map.get((platform, chat_id))
 
 if __name__ == "__main__":
     path_r = Path(__file__).parent.parent / "routing.json"
