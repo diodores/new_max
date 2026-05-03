@@ -7,6 +7,9 @@ from src.config import settings
 from src.senders.whatsapp import WhatsAppSender
 from src.senders.max import MaxSender
 
+from src.logging import log_state, logger
+from src.exceptions import RabbitConnectionError, ProducerNotReadyError
+
 
 class Container:
     def __init__(self):
@@ -20,31 +23,44 @@ class Container:
         self.max_sender = None
 
     async def init(self):
-        self.rabbit = RabbitMQ(settings.RABBITMQ_URL)
-        await self.rabbit.connect()
-        await self.rabbit.setup_exchange()
+        log_state("CONTAINER_INIT_START")
 
-        self.producer = Producer(self.rabbit)
+        try:
+            self.rabbit = RabbitMQ(settings.RABBITMQ_URL)
+            await self.rabbit.connect()
+            await self.rabbit.setup_exchange()
 
+            self.producer = Producer(self.rabbit)
 
-        # SENDERS
-        self.whatsapp_sender = WhatsAppSender(settings)
-        self.max_sender = MaxSender(settings)
+        except Exception as e:
+            logger.error("container_rabbit_init_failed error=%s", e)
+            raise RabbitConnectionError(str(e))
 
+        try:
+            self.whatsapp_sender = WhatsAppSender(settings)
+            self.max_sender = MaxSender(settings)
 
-        # CONSUMERS
-        self.whatsapp = WhatsAppConsumer(
-            self.rabbit,
-            self.max_sender
-        )
+        except Exception as e:
+            logger.error("container_senders_init_failed error=%s", e)
+            raise
 
-        self.max = MaxConsumer(
-            self.rabbit,
-            self.whatsapp_sender
-        )
+        try:
+            self.whatsapp = WhatsAppConsumer(self.rabbit, self.max_sender)
+            self.max = MaxConsumer(self.rabbit, self.whatsapp_sender)
+
+        except Exception as e:
+            logger.error("container_consumers_init_failed error=%s", e)
+            raise
+
+        log_state("CONTAINER_READY")
 
     async def shutdown(self):
-        await self.rabbit.close()
+        log_state("CONTAINER_SHUTDOWN")
+
+        try:
+            await self.rabbit.close()
+        except Exception as e:
+            logger.error("rabbit_shutdown_error error=%s", e)
 
         if self.whatsapp_sender:
             await self.whatsapp_sender.close()
@@ -52,9 +68,10 @@ class Container:
         if self.max_sender:
             await self.max_sender.close()
 
+        log_state("CONTAINER_STOPPED")
+
 
 container = Container()
-
 
 if __name__ == "__main__":
 

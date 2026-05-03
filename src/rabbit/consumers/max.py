@@ -3,6 +3,7 @@ import asyncio
 import json
 
 from src.senders.utils import build_message
+from src.logging import log_state, logger, log_block_end
 
 
 class MaxConsumer:
@@ -14,39 +15,59 @@ class MaxConsumer:
         channel = await self.rabbit.create_channel()
 
         queue = await channel.declare_queue("max_inbox")
-
         exchange = self.rabbit.get_exchange()
 
         await queue.bind(exchange, routing_key="120363423596256859@g.us")
         await queue.bind(exchange, routing_key="120363408049945016@g.us")
 
+        log_state("MAX_CONSUMER_STARTED")
+
         async with queue.iterator() as it:
             async for message in it:
+
                 async with message.process():
-                    data = json.loads(message.body.decode())
+                    try:
+                        data = json.loads(message.body.decode())
 
-                    msg = build_message(data)
+                        msg = build_message(data)
+                        if not msg:
+                            continue
 
-                    if not msg:
-                        continue
+                        routing_key = str(message.routing_key)
 
-                    routing_key = str(message.routing_key)
+                        # TEXT
+                        if msg["type"] == "text":
+                            await self.whatsapp_sender.send_text(
+                                chat_id=routing_key,
+                                text=msg["text"]
+                            )
 
-                    if msg["type"] == "text":
-                        await self.whatsapp_sender.send_text(
-                            chat_id=routing_key,
-                            text=msg["text"]
+                        # FILE
+                        elif msg["type"] == "file":
+                            await self.whatsapp_sender.send_file(
+                                chat_id=routing_key,
+                                file_url=msg["file_url"],
+                                caption=msg.get("caption")
+                            )
+
+                        log_state(
+                            "MAX_MESSAGE_SENT",
+                            routing_key=routing_key,
+                            type=msg["type"]
+                        )
+                        log_block_end(routing_key)
+
+
+                    except Exception as e:
+                        logger.error(
+                            "max_consumer_error routing_key=%s error=%s",
+                            message.routing_key,
+                            e
                         )
 
-                    elif msg["type"] == "file":
-                        await self.whatsapp_sender.send_file(
-                            chat_id=routing_key,
-                            file_url=msg["file_url"],
-                            caption=msg.get("caption")
+                        log_state(
+                            "MAX_CONSUMER_ERROR",
+                            routing_key=message.routing_key
                         )
 
-                    # print("\n[MAX MESSAGE]")
-                    # print(f"routing_key: {routing_key}")
-                    # print(msg)
-
-                    await asyncio.sleep(1)
+                await asyncio.sleep(1)

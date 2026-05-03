@@ -1,8 +1,9 @@
 import asyncio
-
 import aiohttp
+
 from src.senders.base import BaseSender
 from src.config import Settings
+from src.logging import log_state, logger
 
 
 class WhatsAppSender(BaseSender):
@@ -22,11 +23,12 @@ class WhatsAppSender(BaseSender):
     async def _get_session(self) -> aiohttp.ClientSession:
         if self.session is None:
             self.session = aiohttp.ClientSession()
+            log_state("HTTP_SESSION_CREATED", service="whatsapp")
         return self.session
 
+    # TEXT
     async def send_text(self, chat_id: str, text: str) -> dict:
         session = await self._get_session()
-
         url = self._url("sendMessage")
 
         payload = {
@@ -34,9 +36,23 @@ class WhatsAppSender(BaseSender):
             "message": text,
         }
 
-        async with session.post(url, json=payload) as resp:
-            return await resp.json()
+        try:
+            async with session.post(url, json=payload) as resp:
+                data = await resp.json()
 
+                if resp.status >= 400:
+                    logger.error("wa_send_text_failed status=%s chat_id=%s response=%s", resp.status, chat_id, data)
+                    raise Exception("WhatsApp API error")
+
+                log_state("WA_TEXT_SENT", chat_id=chat_id)
+
+                return data
+
+        except Exception as e:
+            logger.error("wa_send_text_exception chat_id=%s error=%s", chat_id, str(e))
+            raise
+
+    # FILE
     async def send_file(
         self,
         chat_id: str,
@@ -44,7 +60,6 @@ class WhatsAppSender(BaseSender):
         caption: str | None = None
     ) -> dict:
         session = await self._get_session()
-
         url = self._url("sendFileByUrl")
 
         payload = {
@@ -54,21 +69,38 @@ class WhatsAppSender(BaseSender):
             "caption": caption or "",
         }
 
-        async with session.post(url, json=payload) as resp:
-            return await resp.json()
+        try:
+            async with session.post(url, json=payload) as resp:
+                data = await resp.json()
 
+                if resp.status >= 400:
+                    logger.error("wa_send_file_failed status=%s chat_id=%s response=%s", resp.status, chat_id, data)
+                    raise Exception("WhatsApp API error")
+
+                log_state("WA_FILE_SENT", chat_id=chat_id)
+
+                return data
+
+        except Exception as e:
+            logger.error("wa_send_file_exception chat_id=%s error=%s", chat_id, str(e))
+            raise
+
+    # CLOSE
     async def close(self) -> None:
         if self.session:
             await self.session.close()
             self.session = None
+            log_state("HTTP_SESSION_CLOSED", service="whatsapp")
 
 
 if __name__ == "__main__":
     async def main():
         settings = Settings()
         sender = WhatsAppSender(settings)
-        await sender.send_text(chat_id="120363408049945016@g.us", text="whatsapp")
+        await sender.send_text(
+            chat_id="120363408049945016@g.us",
+            text="whatsapp"
+        )
         await sender.close()
 
     asyncio.run(main())
-

@@ -10,7 +10,7 @@ from src.rabbit.container import container
 from src.rabbit.routing import Router
 from src.api.response import success, ignored
 from src.exceptions import WebhookValidationError, ProducerNotReadyError
-
+from src.logging import log_state, logger, log_block_start
 
 router = APIRouter()
 
@@ -25,44 +25,37 @@ router_obj = Router(path_json)
 @router.post("/{source}")
 async def webhook(request: Request, source: str):
     data = await request.json()
-    #print(f"\n{data}")
     event = data.get("typeWebhook")
-    #print(f"[RAW] event={event}")
+
 
     # --- фильтр по типу события ---
     if event not in ALLOWED_EVENTS:
-        #print("[SKIP EVENT]", event)
-        #print("*************")
         return ignored()
 
     # --- фильтр на мусорные payload ---
     if "messageData" not in data:
-        #print("[SKIP NO messageData]")
         return ignored()
 
     # --- парсинг ---
     try:
         raw = RawWebhook(**data)
     except ValidationError as e:
+        logger.error("validation_error source=%s error=%s", source, e)
         raise WebhookValidationError(str(e))
 
-
     msg = parse_webhook(raw, platform=source)
-
-    #print("\n[NORMALIZED]")
-    #print(msg)
-    #print("---передаю продюсеру---")
-
+    log_block_start(msg.message_id)
     # --- проверка producer ---
     producer = container.producer
     if not producer:
+        logger.error("producer_not_ready")
         raise ProducerNotReadyError()
 
     # --- routing ---
     route = router_obj.resolve(msg.platform, msg.chat_id)
 
     if not route:
-        #print(f"[NO ROUTE] {msg.platform}:{msg.chat_id}")
+        # ❗ вообще можно не логировать
         return ignored()
 
     # --- publish ---
@@ -71,6 +64,12 @@ async def webhook(request: Request, source: str):
         payload=msg.model_dump()
     )
 
-    return success()
+    log_state(
+        "MESSAGE_ROUTED",
+        from_chat=msg.chat_id,
+        to_chat=route["chat_id"],
+        platform=msg.platform
+    )
 
+    return success()
 
