@@ -1,9 +1,7 @@
-#my_project/maxbot_rebbit/src/models/parser.py
 from datetime import datetime, timezone, timedelta
 
 from src.models.raw import RawWebhook
 from src.models.normalized import NormalizedMessage
-
 
 MSK = timezone(timedelta(hours=3))
 
@@ -27,14 +25,11 @@ def parse_webhook(raw: RawWebhook, platform: str) -> NormalizedMessage:
     caption = None
 
     quoted_text = None
-    quoted_media_url = None
-    quoted_file_name = None
-    quoted_caption = None
 
     msg_type = msg.get("typeMessage")
     ext = msg.get("extendedTextMessageData", {})
 
-    # -------- TEXT --------
+    # ---------------- TEXT ----------------
     if msg_type == "textMessage":
         text = msg.get("textMessageData", {}).get("textMessage")
 
@@ -44,41 +39,43 @@ def parse_webhook(raw: RawWebhook, platform: str) -> NormalizedMessage:
     elif msg_type == "reactionMessage":
         reaction = ext.get("text")
 
-    # -------- MEDIA --------
+    # ---------------- MEDIA ----------------
     file_data = msg.get("fileMessageData")
     if file_data:
         media_url = file_data.get("downloadUrl")
         caption = file_data.get("caption") or ""
         file_name = file_data.get("fileName")
 
-    # -------- QUOTED --------
+    # ---------------- QUOTE FIX (ВАЖНО) ----------------
+
     quoted_block = msg.get("quotedMessage")
 
     if quoted_block:
-        q_type = quoted_block.get("typeMessage")
+        quoted_text = (
+            quoted_block.get("textMessage")
+            or quoted_block.get("textMessageData", {}).get("textMessage")
+        )
 
-        if q_type == "textMessage":
-            quoted_text = quoted_block.get("textMessageData", {}).get("textMessage")
+    # 🔥 ГЛАВНЫЙ FIX: WhatsApp reply text ВСЕГДА здесь
+    if msg_type == "quotedMessage":
+        text = ext.get("text")
 
-        elif q_type in ["imageMessage", "videoMessage", "documentMessage"]:
-            quoted_caption = quoted_block.get("caption")
-            quoted_file_name = quoted_block.get("fileName")
-            quoted_media_url = quoted_block.get("downloadUrl")
+        # если есть quotedMessage, берём его как fallback
+        if not quoted_text:
+            quoted_text = text
 
-    # -------- REPLY META (ИСПРАВИТЬ КАК ПРИКРУЧУ БД) --------
+    # ---------------- REPLY META ----------------
     reply_to_message_id = (
         quoted_block.get("stanzaId") if quoted_block else None
     )
 
-    # -------- FORWARDED (ВАЖНО КРИВО РАБОТАЕТ ПОПРАВИТЬ !!!) --------
+    # ---------------- FORWARDED ----------------
     is_forwarded = False
-    forward_score = 0
 
     if msg_type == "extendedTextMessage":
         is_forwarded = ext.get("isForwarded", False)
-        forward_score = ext.get("forwardingScore", 0)
 
-    # -------- TIME --------
+    # ---------------- TIME ----------------
     dt_msk = datetime.fromtimestamp(timestamp, MSK).strftime("%Y-%m-%d %H:%M:%S")
 
     return NormalizedMessage(
@@ -95,12 +92,8 @@ def parse_webhook(raw: RawWebhook, platform: str) -> NormalizedMessage:
         caption=caption,
 
         quoted_text=quoted_text,
-        quoted_media_url=quoted_media_url,
-        quoted_file_name=quoted_file_name,
-        quoted_caption=quoted_caption,
 
         is_forwarded=is_forwarded,
-        forward_score=forward_score,
 
         reply_to_message_id=reply_to_message_id,
 

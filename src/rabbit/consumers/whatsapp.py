@@ -36,6 +36,7 @@ class WhatsAppConsumer:
 
                         # TEXT
                         if msg["type"] == "text":
+                            print(msg["text"])
                             await self.max_sender.send_text(
                                 chat_id=routing_key,
                                 text=msg["text"]

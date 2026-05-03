@@ -24,8 +24,7 @@ def build_message(data: dict) -> dict | None:
     msg_emoji = "💬"
     file_emoji = "📎"
 
-
-    # REACTION (игнор)
+    # REACTION
     if reaction:
         log_state("MESSAGE_SKIPPED", reason="reaction")
         return None
@@ -55,9 +54,9 @@ def build_message(data: dict) -> dict | None:
             )
         }
 
-    # REPLY
+    # REPLY (FIXED FALLBACK)
     if quoted_text or quoted_caption or reply_to:
-        quoted = quoted_text or quoted_caption or "[сообщение недоступно]"
+        quoted = quoted_text or quoted_caption or text or "[сообщение недоступно]"
 
         return {
             "type": "text",
@@ -83,6 +82,5 @@ def build_message(data: dict) -> dict | None:
             )
         }
 
-    # UNKNOWN
     log_state("MESSAGE_DROPPED", reason="unknown_format")
     return None
