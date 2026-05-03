@@ -6,6 +6,7 @@ from src.rabbit.consumers.max import MaxConsumer
 from src.config import settings
 from src.senders.whatsapp import WhatsAppSender
 from src.senders.max import MaxSender
+
 from src.logging import log_state, logger
 from src.exceptions import RabbitConnectionError, ProducerNotReadyError
 
@@ -28,64 +29,38 @@ class Container:
             self.rabbit = RabbitMQ(settings.RABBITMQ_URL)
             await self.rabbit.connect()
             await self.rabbit.setup_exchange()
-            log_state("RABBIT_READY")
 
-        except Exception as e:
-            logger.error("rabbit_init_failed error=%s", e)
-            raise RabbitConnectionError(str(e))
-
-        try:
             self.producer = Producer(self.rabbit)
 
-            if not self.producer:
-                raise ProducerNotReadyError("Producer init failed")
-
-            log_state("PRODUCER_READY")
-
         except Exception as e:
-            logger.error("producer_init_failed error=%s", e)
-            raise ProducerNotReadyError(str(e))
+            logger.error("container_rabbit_init_failed error=%s", e)
+            raise RabbitConnectionError(str(e))
 
-
-        # SENDERS
         try:
             self.whatsapp_sender = WhatsAppSender(settings)
             self.max_sender = MaxSender(settings)
 
-            log_state("SENDERS_READY")
-
         except Exception as e:
-            logger.error("senders_init_failed error=%s", e)
+            logger.error("container_senders_init_failed error=%s", e)
             raise
 
-
-        # CONSUMERS
         try:
-            self.whatsapp = WhatsAppConsumer(
-                self.rabbit,
-                self.max_sender
-            )
-
-            self.max = MaxConsumer(
-                self.rabbit,
-                self.whatsapp_sender
-            )
-
-            log_state("CONSUMERS_READY")
+            self.whatsapp = WhatsAppConsumer(self.rabbit, self.max_sender)
+            self.max = MaxConsumer(self.rabbit, self.whatsapp_sender)
 
         except Exception as e:
-            logger.error("consumers_init_failed error=%s", e)
+            logger.error("container_consumers_init_failed error=%s", e)
             raise
 
-        log_state("CONTAINER_INIT_DONE")
+        log_state("CONTAINER_READY")
 
     async def shutdown(self):
-        log_state("CONTAINER_SHUTDOWN_START")
+        log_state("CONTAINER_SHUTDOWN")
 
         try:
             await self.rabbit.close()
         except Exception as e:
-            logger.error("rabbit_shutdown_failed error=%s", e)
+            logger.error("rabbit_shutdown_error error=%s", e)
 
         if self.whatsapp_sender:
             await self.whatsapp_sender.close()
@@ -93,10 +68,10 @@ class Container:
         if self.max_sender:
             await self.max_sender.close()
 
-        log_state("CONTAINER_SHUTDOWN_DONE")
+        log_state("CONTAINER_STOPPED")
+
 
 container = Container()
-
 
 if __name__ == "__main__":
 

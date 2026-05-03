@@ -3,7 +3,7 @@ import asyncio
 
 from src.senders.base import BaseSender
 from src.config import Settings
-from src.logging import log_state, logger
+from src.logging import log_state, logger, log_block_end
 
 
 class MaxSender(BaseSender):

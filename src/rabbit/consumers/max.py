@@ -3,7 +3,7 @@ import asyncio
 import json
 
 from src.senders.utils import build_message
-from src.logging import log_state, logger
+from src.logging import log_state, logger, log_block_end
 
 
 class MaxConsumer:
@@ -29,29 +29,20 @@ class MaxConsumer:
                     try:
                         data = json.loads(message.body.decode())
 
-                        log_state(
-                            "MAX_MESSAGE_RECEIVED",
-                            routing_key=message.routing_key
-                        )
-
                         msg = build_message(data)
-
                         if not msg:
-                            log_state(
-                                "MAX_MESSAGE_DROPPED",
-                                reason="invalid_message",
-                                routing_key=message.routing_key
-                            )
                             continue
 
                         routing_key = str(message.routing_key)
 
+                        # TEXT
                         if msg["type"] == "text":
                             await self.whatsapp_sender.send_text(
                                 chat_id=routing_key,
                                 text=msg["text"]
                             )
 
+                        # FILE
                         elif msg["type"] == "file":
                             await self.whatsapp_sender.send_file(
                                 chat_id=routing_key,
@@ -60,10 +51,12 @@ class MaxConsumer:
                             )
 
                         log_state(
-                            "MAX_MESSAGE_PROCESSED",
+                            "MAX_MESSAGE_SENT",
                             routing_key=routing_key,
                             type=msg["type"]
                         )
+                        log_block_end(routing_key)
+
 
                     except Exception as e:
                         logger.error(
@@ -73,7 +66,7 @@ class MaxConsumer:
                         )
 
                         log_state(
-                            "MAX_MESSAGE_ERROR",
+                            "MAX_CONSUMER_ERROR",
                             routing_key=message.routing_key
                         )
 

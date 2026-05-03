@@ -10,7 +10,7 @@ from src.rabbit.container import container
 from src.rabbit.routing import Router
 from src.api.response import success, ignored
 from src.exceptions import WebhookValidationError, ProducerNotReadyError
-from src.logging import log_state, logger
+from src.logging import log_state, logger, log_block_start
 
 router = APIRouter()
 
@@ -27,34 +27,27 @@ async def webhook(request: Request, source: str):
     data = await request.json()
     event = data.get("typeWebhook")
 
-    log_state("RECEIVED", source=source, event=event)
 
     # --- фильтр по типу события ---
     if event not in ALLOWED_EVENTS:
-        log_state("IGNORED", reason="bad_event", event=event, source=source)
         return ignored()
 
     # --- фильтр на мусорные payload ---
     if "messageData" not in data:
-        log_state("IGNORED", reason="no_messageData", source=source)
         return ignored()
 
     # --- парсинг ---
     try:
         raw = RawWebhook(**data)
     except ValidationError as e:
-        log_state("ERROR_VALIDATION", source=source)
-        logger.error("validation_error source=%s , error=%s", source, e)
+        logger.error("validation_error source=%s error=%s", source, e)
         raise WebhookValidationError(str(e))
 
-
     msg = parse_webhook(raw, platform=source)
-    log_state("PARSED", chat_id=msg.chat_id, platform=msg.platform)
-
+    log_block_start(msg.message_id)
     # --- проверка producer ---
     producer = container.producer
     if not producer:
-        log_state("ERROR", reason="producer_not_ready")
         logger.error("producer_not_ready")
         raise ProducerNotReadyError()
 
@@ -62,7 +55,7 @@ async def webhook(request: Request, source: str):
     route = router_obj.resolve(msg.platform, msg.chat_id)
 
     if not route:
-        log_state("IGNORED", reason="no_route", chat_id=msg.chat_id, platform=msg.platform)
+        # ❗ вообще можно не логировать
         return ignored()
 
     # --- publish ---
@@ -71,6 +64,12 @@ async def webhook(request: Request, source: str):
         payload=msg.model_dump()
     )
 
-    return success()
+    log_state(
+        "MESSAGE_ROUTED",
+        from_chat=msg.chat_id,
+        to_chat=route["chat_id"],
+        platform=msg.platform
+    )
 
+    return success()
 
