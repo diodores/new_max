@@ -12,3 +12,4 @@ wheels/
 .python-version
 .idea
 routing.json
+/logs
