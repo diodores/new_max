@@ -1,3 +1,6 @@
+from src.logging import log_state
+
+
 def build_message(data: dict) -> dict | None:
     author = data.get("author", "unknown")
     text = data.get("text")
@@ -13,7 +16,6 @@ def build_message(data: dict) -> dict | None:
 
     time = data.get("datetime_msk", "")
 
-
     # EMOJI
     user_emoji = "👤"
     time_emoji = "🕒"
@@ -23,10 +25,10 @@ def build_message(data: dict) -> dict | None:
     file_emoji = "📎"
 
 
-    # REACTION
+    # REACTION (игнор)
     if reaction:
+        log_state("MESSAGE_SKIPPED", reason="reaction")
         return None
-
 
     # FILE
     if media_url:
@@ -41,8 +43,7 @@ def build_message(data: dict) -> dict | None:
             )
         }
 
-
-    # FORWARDED (КРИВО !)
+    # FORWARDED
     if is_forwarded:
         return {
             "type": "text",
@@ -54,8 +55,7 @@ def build_message(data: dict) -> dict | None:
             )
         }
 
-
-    # REPLY (ПРОРАБОТАТЬ)
+    # REPLY
     if quoted_text or quoted_caption or reply_to:
         quoted = quoted_text or quoted_caption or "[сообщение недоступно]"
 
@@ -72,7 +72,6 @@ def build_message(data: dict) -> dict | None:
             )
         }
 
-
     # TEXT
     if text:
         return {
@@ -84,4 +83,6 @@ def build_message(data: dict) -> dict | None:
             )
         }
 
+    # UNKNOWN
+    log_state("MESSAGE_DROPPED", reason="unknown_format")
     return None

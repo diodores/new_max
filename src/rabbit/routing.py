@@ -2,7 +2,9 @@
 import json
 from pathlib import Path
 from typing import Dict, Tuple
+
 from src.exceptions import RoutingConfigError
+from src.logging import log_state, logger
 
 
 class Router:
@@ -13,42 +15,45 @@ class Router:
 
     def load(self):
         """
-        способ превратить список routes в словарь для поиска по ключу.
-        :return: {('platform', 'chat_id') --> {'platform':'...', 'chat_id':'...'} и т.д
+        Превращаем routes → dict для O(1) lookup
         """
+
         if not self.path.exists():
-            raise RoutingConfigError(f"Не найден файл для создания карты роутинга: {self.path}")
+            logger.error("routing_file_not_found path=%s", self.path)
+            raise RoutingConfigError(f"Не найден файл routing: {self.path}")
 
         try:
             data = json.loads(self.path.read_text())
         except Exception as e:
-            raise RoutingConfigError(f"from Не корретный routing.json: {e}")
+            logger.error("routing_json_invalid error=%s", str(e))
+            raise RoutingConfigError(f"Некорректный routing.json: {e}")
 
-        routes = data.get("routes", [])
+        routes = data.get("routes")
 
         if routes is None:
-            raise RoutingConfigError("В файле routing.json отсутствует поле «routes»")
+            logger.error("routing_missing_routes_field")
+            raise RoutingConfigError("В routing.json отсутствует поле 'routes'")
 
-        # (platform, chat_id) -> {platform, chat_id}
-        self._map = {
-            (r["from"]["platform"], r["from"]["chat_id"]): r["to"]
-            for r in routes
-        }
+        try:
+            self._map = {
+                (r["from"]["platform"], r["from"]["chat_id"]): r["to"]
+                for r in routes
+            }
+        except Exception as e:
+            logger.error("routing_invalid_structure error=%s", str(e))
+            raise RoutingConfigError(f"Ошибка структуры routing.json: {e}")
+
+        log_state("ROUTING_LOADED", routes_count=len(self._map))
 
     def resolve(self, platform: str, chat_id: str) -> Dict | None:
         """
-        Задаем источник , получаем кому предназначается.
-        :param platform:
-        :param chat_id:
-        :return: {'platform': '...', 'chat_id': '...'}
+        Получаем маршрут назначения
         """
-        return self._map.get((platform, chat_id))
 
-if __name__ == "__main__":
-    path_r = Path(__file__).parent.parent / "routing.json"
-    router = Router(path_r)
-    #print(router.resolve("max", "-72932271489781"))
-    rout = router._map
-    print(rout)
-    for k, v in rout.items():
-        print(k, v)
+        route = self._map.get((platform, chat_id))
+
+        if not route:
+            # это НЕ ошибка → это нормальная бизнес-ветка
+            log_state("ROUTE_NOT_FOUND", platform=platform, chat_id=chat_id)
+
+        return route

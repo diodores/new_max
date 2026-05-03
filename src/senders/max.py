@@ -1,7 +1,9 @@
 import aiohttp
 import asyncio
+
 from src.senders.base import BaseSender
 from src.config import Settings
+from src.logging import log_state, logger
 
 
 class MaxSender(BaseSender):
@@ -20,11 +22,12 @@ class MaxSender(BaseSender):
     async def _get_session(self):
         if self.session is None:
             self.session = aiohttp.ClientSession()
+            log_state("HTTP_SESSION_CREATED", service="max")
         return self.session
 
+    # TEXT
     async def send_text(self, chat_id: str, text: str) -> dict:
         session = await self._get_session()
-
         url = self._url("sendMessage")
 
         payload = {
@@ -32,9 +35,23 @@ class MaxSender(BaseSender):
             "message": text,
         }
 
-        async with session.post(url, json=payload) as resp:
-            return await resp.json()
+        try:
+            async with session.post(url, json=payload) as resp:
+                data = await resp.json()
 
+                if resp.status >= 400:
+                    logger.error( "max_send_text_failed status=%s chat_id=%s response=%s", resp.status, chat_id, data)
+                    raise Exception("Max API error")
+
+                log_state("MAX_TEXT_SENT", chat_id=chat_id)
+
+                return data
+
+        except Exception as e:
+            logger.error("max_send_text_exception chat_id=%s error=%s", chat_id, str(e))
+            raise
+
+    # FILE
     async def send_file(
         self,
         chat_id: str,
@@ -42,10 +59,8 @@ class MaxSender(BaseSender):
         caption: str | None = None
     ) -> dict:
         session = await self._get_session()
-
         url = self._url("sendFileByUrl")
 
-        # у MAX реально часто пустой payload + query достаточно
         payload = {
             "chatId": chat_id,
             "urlFile": file_url,
@@ -53,20 +68,25 @@ class MaxSender(BaseSender):
             "caption": caption or "",
         }
 
-        async with session.post(url, json=payload) as resp:
-            return await resp.json()
+        try:
+            async with session.post(url, json=payload) as resp:
+                data = await resp.json()
 
+                if resp.status >= 400:
+                    logger.error("max_send_file_failed status=%s chat_id=%s response=%s", resp.status, chat_id, data)
+                    raise Exception("Max API error")
+
+                log_state("MAX_FILE_SENT", chat_id=chat_id)
+
+                return data
+
+        except Exception as e:
+            logger.error("max_send_file_exception chat_id=%s error=%s", chat_id, str(e))
+            raise
+
+    # CLOSE
     async def close(self) -> None:
         if self.session:
             await self.session.close()
             self.session = None
-
-
-if __name__ == "__main__":
-    async def main():
-        settings = Settings()
-        sender = MaxSender(settings)
-        await sender.send_text(chat_id="-73294784463605", text="test")
-        await sender.close()
-
-    asyncio.run(main())
+            log_state("HTTP_SESSION_CLOSED", service="max")

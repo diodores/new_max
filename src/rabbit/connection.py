@@ -3,6 +3,7 @@ import asyncio
 import aio_pika
 
 from src.exceptions import RabbitConnectionError, RabbitChannelError, ExchangeNotInitializedError
+from src.logging import logger, log_state
 
 
 class RabbitMQ:
@@ -16,14 +17,18 @@ class RabbitMQ:
         Подключение к RabbitMQ с retry,
         чтобы не падать при раннем старте контейнера.
         """
+        log_state("RABBITMQ CONNECTING")
         for attempt in range(10):
             try:
                 self._connection = await aio_pika.connect_robust(self._url)
+                log_state("RABBIT_CONNECTED", attempt=attempt + 1)
                 return
             except Exception as e:
-                print(f"[RabbitMQ] not ready ({attempt + 1}/10): {e}")
+                logger.warning("rabbit_connect_retry attempt=%s error=%s", attempt + 1, e)
                 await asyncio.sleep(2)
 
+        log_state("RABBIT_CONNECTION_FAILED")
+        logger.error("RABBIT_CONNECTION_FAILED")
         raise RabbitConnectionError ("Не удалось подключится к RabbitMQ, попытки исчерпаны")
 
     async def close(self):
@@ -35,18 +40,23 @@ class RabbitMQ:
             self._connection = None
             self._exchange = None
 
+            log_state("RABBIT_DISCONNECTED")
+
     async def create_channel(self):
         """
         Создание канала с QoS.
         """
         if not self._connection:
-            raise RabbitChannelError("RabbitMQ не подключен")
+            log_state("RABBIT_CHANNEL_ERROR", reason="no_connection")
+            raise RabbitChannelError("RabbitMQ no_connection")
 
         try:
             channel = await self._connection.channel(publisher_confirms=True)
             await channel.set_qos(prefetch_count=1)
+            log_state("RABBIT_CHANNEL_CREATED")
             return channel
         except Exception as e:
+            logger.error("rabbit_channel_error error=%s", e)
             raise RabbitChannelError(str(e))
 
     async def setup_exchange(self):
@@ -54,6 +64,7 @@ class RabbitMQ:
         Создание exchange (idempotent по смыслу).
         """
         channel = await self.create_channel()
+        log_state("RABBIT_EXCHANGE_READY")
 
         self._exchange = await channel.declare_exchange(
             "messenger_exchange",
@@ -66,7 +77,9 @@ class RabbitMQ:
         Безопасный доступ к exchange.
         """
         if not self._exchange:
-            raise ExchangeNotInitializedError("Exchange from не ициниализирован")
+            log_state("ERROR", reason="exchange_not_initialized")
+            logger.error("ERROR", reason="exchange_not_initialized")
+            raise ExchangeNotInitializedError("Exchange not initialized")
         return self._exchange
 
     async def init(self):
@@ -75,3 +88,5 @@ class RabbitMQ:
         """
         await self.connect()
         await self.setup_exchange()
+
+        log_state("RABBIT_INIT_DONE")
