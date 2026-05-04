@@ -1,11 +1,11 @@
-#my_project/maxbot_rebbit/src/rabbit/producer.py
+#/home/deb/my_project/maxbot_rebbit/src/rabbit/producer.py
 import json
 import uuid
 import asyncio
 from aio_pika import Message
 
 from src.exceptions import PublishError
-from src.logging import log_state, logger
+from src.logging_app import log_state, logger
 
 
 
@@ -73,7 +73,9 @@ class Producer:
         logger.error(
             "publish_failed_final routing_key=%s error=%s",
             routing_key,
-            str(last_error)
+            str(last_error),
+            exc_info=True
         )
 
         raise PublishError(str(last_error))
+

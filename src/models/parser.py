@@ -1,3 +1,4 @@
+#/home/deb/my_project/maxbot_rebbit/src/models/parser.py
 from datetime import datetime, timezone, timedelta
 
 from src.models.raw import RawWebhook
@@ -103,3 +104,4 @@ def parse_webhook(raw: RawWebhook, platform: str) -> NormalizedMessage:
 
         message_id=raw.idMessage,
     )
+

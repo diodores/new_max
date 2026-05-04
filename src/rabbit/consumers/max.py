@@ -1,9 +1,9 @@
-#my_project/maxbot_rebbit/src/rabbit/consumers/max.py
+#/home/deb/my_project/maxbot_rebbit/src/rabbit/consumers/max.py
 import asyncio
 import json
 
 from src.senders.utils import build_message
-from src.logging import log_state, logger, log_block_end
+from src.logging_app import log_state, logger, log_block_end
 
 
 class MaxConsumer:
@@ -63,7 +63,8 @@ class MaxConsumer:
                         logger.error(
                             "max_consumer_error routing_key=%s error=%s",
                             message.routing_key,
-                            e
+                            e,
+                            exc_info=True
                         )
 
                         log_state(
@@ -72,3 +73,4 @@ class MaxConsumer:
                         )
 
                 await asyncio.sleep(1)
+

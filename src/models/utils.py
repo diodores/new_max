@@ -1,4 +1,4 @@
-#my_project/maxbot_rebbit/src/models/utils.py
+#/home/deb/my_project/maxbot_rebbit/src/models/utils.py
 from datetime import datetime
 from zoneinfo import ZoneInfo
 

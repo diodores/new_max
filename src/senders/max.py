@@ -1,9 +1,10 @@
+#/home/deb/my_project/maxbot_rebbit/src/senders/max.py
 import aiohttp
-import asyncio
+
 
 from src.senders.base import BaseSender
 from src.config import Settings
-from src.logging import log_state, logger, log_block_end
+from src.logging_app import log_state, logger, log_block_end
 
 
 class MaxSender(BaseSender):
@@ -40,7 +41,13 @@ class MaxSender(BaseSender):
                 data = await resp.json()
 
                 if resp.status >= 400:
-                    logger.error( "max_send_text_failed status=%s chat_id=%s response=%s", resp.status, chat_id, data)
+                    logger.error(
+                        "max_send_text_failed status=%s chat_id=%s response=%s",
+                        resp.status,
+                        chat_id,
+                        data,
+                        exc_info=True
+                    )
                     raise Exception("Max API error")
 
                 log_state("MAX_TEXT_SENT", chat_id=chat_id)
@@ -73,7 +80,13 @@ class MaxSender(BaseSender):
                 data = await resp.json()
 
                 if resp.status >= 400:
-                    logger.error("max_send_file_failed status=%s chat_id=%s response=%s", resp.status, chat_id, data)
+                    logger.error(
+                        "max_send_file_failed status=%s chat_id=%s response=%s",
+                        resp.status,
+                        chat_id,
+                        data,
+                        exc_info=True
+                    )
                     raise Exception("Max API error")
 
                 log_state("MAX_FILE_SENT", chat_id=chat_id)
@@ -81,7 +94,7 @@ class MaxSender(BaseSender):
                 return data
 
         except Exception as e:
-            logger.error("max_send_file_exception chat_id=%s error=%s", chat_id, str(e))
+            logger.error("max_send_file_exception chat_id=%s error=%s", chat_id, str(e), exc_info=True)
             raise
 
     # CLOSE
@@ -90,3 +103,4 @@ class MaxSender(BaseSender):
             await self.session.close()
             self.session = None
             log_state("HTTP_SESSION_CLOSED", service="max")
+

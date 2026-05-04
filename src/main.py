@@ -1,4 +1,4 @@
-#my_project/maxbot_rebbit/src/main.py
+#/home/deb/my_project/maxbot_rebbit/src/main.py
 import asyncio
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
@@ -7,7 +7,7 @@ from src.rabbit.container import container
 from src.api.webhook import router as webhook_router
 from src.api.exceptions.handler import register_exception_handlers
 
-from src.logging import log_state, logger
+from src.logging_app import log_state, logger
 
 
 consumer_tasks = []

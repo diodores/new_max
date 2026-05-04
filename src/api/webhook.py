@@ -1,4 +1,4 @@
-#maxbot_rebbit/src/api/webhook.py
+#/home/deb/my_project/maxbot_rebbit/src/api/webhook.py
 from pathlib import Path
 
 from fastapi import APIRouter, Request, HTTPException
@@ -10,7 +10,7 @@ from src.rabbit.container import container
 from src.rabbit.routing import Router
 from src.api.response import success, ignored
 from src.exceptions import WebhookValidationError, ProducerNotReadyError
-from src.logging import log_state, logger, log_block_start
+from src.logging_app import log_state, logger, log_block_start
 
 router = APIRouter()
 
@@ -25,7 +25,7 @@ router_obj = Router(path_json)
 @router.post("/{source}")
 async def webhook(request: Request, source: str):
     data = await request.json()
-    print(data)
+    logger.info(f"Received webhook request: {data}")
     event = data.get("typeWebhook")
 
 
@@ -41,7 +41,7 @@ async def webhook(request: Request, source: str):
     try:
         raw = RawWebhook(**data)
     except ValidationError as e:
-        logger.error("validation_error source=%s error=%s", source, e)
+        logger.error("validation_error source=%s error=%s", source, e, exc_info=True)
         raise WebhookValidationError(str(e))
 
     msg = parse_webhook(raw, platform=source)
@@ -49,7 +49,7 @@ async def webhook(request: Request, source: str):
     # --- проверка producer ---
     producer = container.producer
     if not producer:
-        logger.error("producer_not_ready")
+        logger.error("producer_not_ready", exc_info=True)
         raise ProducerNotReadyError()
 
     # --- routing ---

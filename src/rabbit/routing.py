@@ -1,10 +1,10 @@
-#my_project/maxbot_rebbit/src/rabbit/routing.py
+#/home/deb/my_project/maxbot_rebbit/src/rabbit/routing.py
 import json
 from pathlib import Path
 from typing import Dict, Tuple
 
 from src.exceptions import RoutingConfigError
-from src.logging import log_state, logger
+from src.logging_app import log_state, logger
 
 
 class Router:
@@ -25,7 +25,7 @@ class Router:
         try:
             data = json.loads(self.path.read_text())
         except Exception as e:
-            logger.error("routing_json_invalid error=%s", str(e))
+            logger.error("routing_json_invalid error=%s", str(e), exc_info=True)
             raise RoutingConfigError(f"Некорректный routing.json: {e}")
 
         routes = data.get("routes")
@@ -40,7 +40,7 @@ class Router:
                 for r in routes
             }
         except Exception as e:
-            logger.error("routing_invalid_structure error=%s", str(e))
+            logger.error("routing_invalid_structure error=%s", str(e), exc_info=True)
             raise RoutingConfigError(f"Ошибка структуры routing.json: {e}")
 
         log_state("ROUTING_LOADED", routes_count=len(self._map))
@@ -57,3 +57,4 @@ class Router:
             log_state("ROUTE_NOT_FOUND", platform=platform, chat_id=chat_id)
 
         return route
+

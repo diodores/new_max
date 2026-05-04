@@ -1,4 +1,4 @@
-# src/exceptions.py
+#/home/deb/my_project/maxbot_rebbit/src/exceptions.py
 
 class AppError(Exception):
     """
@@ -56,3 +56,4 @@ class ProducerNotReadyError(AppError):
 class PublishError(AppError):
     """Ошибка отправки в RabbitMQ"""
     pass
+

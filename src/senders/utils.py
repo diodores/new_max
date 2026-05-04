@@ -1,7 +1,9 @@
-from src.logging import log_state
+#/home/deb/my_project/maxbot_rebbit/src/senders/utils.py
+from src.logging_app import log_state, logger
 
 
 def build_message(data: dict) -> dict | None:
+    logger.info(f"build_message: {data}")
     author = data.get("author", "unknown")
     text = data.get("text")
     media_url = data.get("media_url")
@@ -84,3 +86,4 @@ def build_message(data: dict) -> dict | None:
 
     log_state("MESSAGE_DROPPED", reason="unknown_format")
     return None
+

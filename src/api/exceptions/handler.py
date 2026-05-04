@@ -1,4 +1,4 @@
-#src/api/exceptions/handlers.py
+#/home/deb/my_project/maxbot_rebbit/src/api/exceptions/handler.py
 from fastapi import Request, FastAPI
 from fastapi.responses import JSONResponse
 from src.api.response import error, ignored
@@ -106,3 +106,4 @@ def register_exception_handlers(app: FastAPI):
             status_code=502,
             content=error("publish_error"),
         )
+

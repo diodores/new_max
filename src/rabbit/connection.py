@@ -1,3 +1,4 @@
+#/home/deb/my_project/maxbot_rebbit/src/rabbit/connection.py
 import asyncio
 import aio_pika
 
@@ -7,7 +8,7 @@ from src.exceptions import (
     ExchangeNotInitializedError
 )
 
-from src.logging import logger, log_state
+from src.logging_app import logger, log_state
 
 
 class RabbitMQ:
@@ -34,7 +35,7 @@ class RabbitMQ:
                 )
                 await asyncio.sleep(2)
 
-        logger.error("rabbit_connection_failed")
+        logger.error("rabbit_connection_failed", exc_info=True)
         raise RabbitConnectionError("Rabbit connection failed")
 
     async def close(self):
@@ -55,7 +56,7 @@ class RabbitMQ:
             return channel
 
         except Exception as e:
-            logger.error("rabbit_channel_error error=%s", e)
+            logger.error("rabbit_channel_error error=%s", e, exc_info=True)
             raise RabbitChannelError(str(e))
 
     async def setup_exchange(self):
@@ -80,3 +81,4 @@ class RabbitMQ:
         await self.setup_exchange()
 
         log_state("RABBIT_INIT_DONE")
+

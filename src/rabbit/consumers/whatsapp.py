@@ -1,8 +1,9 @@
+#/home/deb/my_project/maxbot_rebbit/src/rabbit/consumers/whatsapp.py
 import asyncio
 import json
 
 from src.senders.utils import build_message
-from src.logging import log_state, logger, log_block_end
+from src.logging_app import log_state, logger, log_block_end
 
 
 class WhatsAppConsumer:
@@ -16,7 +17,7 @@ class WhatsAppConsumer:
         queue = await channel.declare_queue("wa_inbox")
         exchange = self.rabbit.get_exchange()
 
-        await queue.bind(exchange, routing_key="-72932271489781")
+        #await queue.bind(exchange, routing_key="-72932271489781")
         await queue.bind(exchange, routing_key="-73294784463605")
 
         log_state("WHATSAPP_CONSUMER_STARTED")
@@ -61,7 +62,8 @@ class WhatsAppConsumer:
                         logger.error(
                             "whatsapp_consumer_error routing_key=%s error=%s",
                             message.routing_key,
-                            e
+                            e,
+                            exc_info=True
                         )
 
                         log_state(
@@ -70,3 +72,4 @@ class WhatsAppConsumer:
                         )
 
                 await asyncio.sleep(1)
+

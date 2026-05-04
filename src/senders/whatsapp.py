@@ -3,7 +3,7 @@ import aiohttp
 
 from src.senders.base import BaseSender
 from src.config import Settings
-from src.logging import log_state, logger
+from src.logging_app import log_state, logger
 
 
 class WhatsAppSender(BaseSender):
@@ -49,7 +49,7 @@ class WhatsAppSender(BaseSender):
                 return data
 
         except Exception as e:
-            logger.error("wa_send_text_exception chat_id=%s error=%s", chat_id, str(e))
+            logger.error("wa_send_text_exception chat_id=%s error=%s", chat_id, str(e), exc_info=True)
             raise
 
     # FILE
@@ -74,7 +74,12 @@ class WhatsAppSender(BaseSender):
                 data = await resp.json()
 
                 if resp.status >= 400:
-                    logger.error("wa_send_file_failed status=%s chat_id=%s response=%s", resp.status, chat_id, data)
+                    logger.error(
+                        "wa_send_file_failed status=%s chat_id=%s response=%s",
+                        resp.status,
+                        chat_id, data,
+                        exc_info=True
+                    )
                     raise Exception("WhatsApp API error")
 
                 log_state("WA_FILE_SENT", chat_id=chat_id)
@@ -82,7 +87,7 @@ class WhatsAppSender(BaseSender):
                 return data
 
         except Exception as e:
-            logger.error("wa_send_file_exception chat_id=%s error=%s", chat_id, str(e))
+            logger.error("wa_send_file_exception chat_id=%s error=%s", chat_id, str(e), exc_info=True)
             raise
 
     # CLOSE

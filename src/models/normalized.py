@@ -1,4 +1,5 @@
-#my_project/maxbot_rebbit/src/models/normalized.py
+#/home/deb/my_project/maxbot_rebbit/src/models/normalized.py
+
 
 from typing import Literal
 from pydantic import BaseModel
@@ -39,3 +40,4 @@ class NormalizedMessage(BaseModel):
 
     reply_to_message_id: str | None = None
     message_id: str = ""
+

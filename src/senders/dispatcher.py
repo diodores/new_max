@@ -1,4 +1,5 @@
-from src.logging import log_state, logger
+#/home/deb/my_project/maxbot_rebbit/src/senders/dispatcher.py
+from src.logging_app import log_state, logger
 
 
 class MessageDispatcher:
@@ -30,6 +31,7 @@ class MessageDispatcher:
                     "dispatch_reaction_failed chat_id=%s error=%s",
                     chat_id,
                     str(e),
+                    exc_info=True
                 )
             return
 
@@ -48,6 +50,7 @@ class MessageDispatcher:
                     "dispatch_file_failed chat_id=%s error=%s",
                     chat_id,
                     str(e),
+                    exc_info=True
                 )
             return
 
@@ -86,6 +89,7 @@ class MessageDispatcher:
                     "dispatch_text_failed chat_id=%s error=%s",
                     chat_id,
                     str(e),
+                    exc_info=True
                 )
             return
 
@@ -102,4 +106,6 @@ class MessageDispatcher:
                 "dispatch_unsupported_failed chat_id=%s error=%s",
                 chat_id,
                 str(e),
+                exc_info=True
             )
+

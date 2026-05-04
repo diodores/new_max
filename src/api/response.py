@@ -1,4 +1,4 @@
-#src/api/response.py
+#/home/deb/my_project/maxbot_rebbit/src/api/response.py
 from typing import Any
 
 
@@ -24,3 +24,4 @@ def error(code: str, message: str | None):
             "message": message
         }
     }
+

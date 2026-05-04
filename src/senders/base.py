@@ -1,3 +1,4 @@
+#/home/deb/my_project/maxbot_rebbit/src/senders/base.py
 from abc import ABC, abstractmethod
 from src.config import Settings
 
@@ -17,3 +18,4 @@ class BaseSender(ABC):
     @abstractmethod
     async def close(self) -> None:
         pass
+

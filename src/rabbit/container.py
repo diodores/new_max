@@ -1,4 +1,4 @@
-#my_project/maxbot_rebbit/src/rabbit/container.py
+#/home/deb/my_project/maxbot_rebbit/src/rabbit/container.py
 from src.rabbit.connection import RabbitMQ
 from src.rabbit.producer import Producer
 from src.rabbit.consumers.whatsapp import WhatsAppConsumer
@@ -7,7 +7,7 @@ from src.config import settings
 from src.senders.whatsapp import WhatsAppSender
 from src.senders.max import MaxSender
 
-from src.logging import log_state, logger
+from src.logging_app import log_state, logger
 from src.exceptions import RabbitConnectionError, ProducerNotReadyError
 
 
@@ -33,7 +33,7 @@ class Container:
             self.producer = Producer(self.rabbit)
 
         except Exception as e:
-            logger.error("container_rabbit_init_failed error=%s", e)
+            logger.error("container_rabbit_init_failed error=%s", e, exc_info=True)
             raise RabbitConnectionError(str(e))
 
         try:
@@ -41,7 +41,7 @@ class Container:
             self.max_sender = MaxSender(settings)
 
         except Exception as e:
-            logger.error("container_senders_init_failed error=%s", e)
+            logger.error("container_senders_init_failed error=%s", e, exc_info=True)
             raise
 
         try:
@@ -49,7 +49,7 @@ class Container:
             self.max = MaxConsumer(self.rabbit, self.whatsapp_sender)
 
         except Exception as e:
-            logger.error("container_consumers_init_failed error=%s", e)
+            logger.error("container_consumers_init_failed error=%s", e, exc_info=True)
             raise
 
         log_state("CONTAINER_READY")
@@ -60,7 +60,7 @@ class Container:
         try:
             await self.rabbit.close()
         except Exception as e:
-            logger.error("rabbit_shutdown_error error=%s", e)
+            logger.error("rabbit_shutdown_error error=%s", e, exc_info=True)
 
         if self.whatsapp_sender:
             await self.whatsapp_sender.close()
@@ -73,28 +73,5 @@ class Container:
 
 container = Container()
 
-if __name__ == "__main__":
 
-    ...
-    # import asyncio
-    #
-    #
-    # async def main():
-    #     container = Container()
-    #
-    #     await container.init()
-    #
-    #     await container.producer.publish(
-    #         "max.chat1",
-    #         "Сообщение для чата макса"
-    #     )
-    #
-    #     await asyncio.sleep(30)
-    #
-    #     await asyncio.gather(
-    #         container.whatsapp.start(),
-    #         container.max.start()
-    #     )
-    #
-    #
-    # asyncio.run(main())
+
